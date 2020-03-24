@@ -6,10 +6,12 @@ COPY . /app
 
 WORKDIR /app
 
-EXPOSE 80
+RUN apk add --no-cache python3-dev libstdc++
 
-RUN pip install -r requirements.txt
+RUN apk add --no-cache g++
 
-VOLUME . /app
+RUN pip3 install --upgrade pip
+
+RUN pip3 install -r requirements.txt
 
 CMD ["python", "run.py"]

@@ -7,13 +7,35 @@ from flask_jwt_extended import JWTManager
 from flask_jwt_extended import (create_access_token, create_refresh_token, jwt_required, jwt_refresh_token_required, get_jwt_identity, get_raw_jwt)
 from hashlib import sha256
 from flask_cors import CORS, cross_origin
+from flask_swagger_ui import get_swaggerui_blueprint
 
+
+
+# ************************** authentification JWT microservice **************************#
+# inputs : username/email , password                                                     #
+# outputs : access_token , refresh_token                                                 #
+# ***************************************************************************************#
 
 
 app = Flask(__name__)
+
+
+### swagger specific ###
+SWAGGER_URL = '/auth/swagger'
+API_URL = '/static/swagger.json'
+SWAGGERUI_BLUEPRINT = get_swaggerui_blueprint(
+    SWAGGER_URL,
+    API_URL,
+    config={
+        'app_name': "JWT Authentification microservice"
+    }
+)
+app.register_blueprint(SWAGGERUI_BLUEPRINT, url_prefix=SWAGGER_URL)
+### end swagger specific ###
+
 cors = CORS(app, resources={r"/*": {"origins": "*"}})
 
-api = Api(app)
+api = Api(app,prefix="/auth")
 
 # cros config
 app.config['CORS_HEADERS'] = 'application/json'
@@ -141,10 +163,10 @@ parser_login.add_argument('username_email', help = 'Username/Email field cannot 
 parser_login.add_argument('password', help = 'Password field cannot be blank', required = True)
 
 
-@app.route('/')
+@app.route('/auth')
 def index():
     return jsonify({'message': 'Hello, World!'})
-lim
+
 
  # Resources
 
@@ -252,14 +274,33 @@ class SecretResource(Resource):
         return {'username':current_user.split(',')[0],'name':current_user.split(',')[1],'email':current_user.split(',')[2]}, 200
 
 
+
+# <== input : username, email ,password,name
+# ==> output : access_token , refresh_token
 api.add_resource(UserRegistration, '/register')
+# <== input : username/email, password
+# ==> output : access_token , refresh_token
 api.add_resource(UserLogin, '/login')
+# <== input : access_token
+# ==> output : token revoked
 api.add_resource(UserLogoutAccess, '/logout/access')
+# <== input : refresh_token
+# ==> output : token revoked
 api.add_resource(UserLogoutRefresh, '/logout/refresh')
+# <== input : refresh_token
+# ==> output : access_token
 api.add_resource(TokenRefresh, '/token/refresh')
+# <== input :
+# ==> output : all users
 api.add_resource(AllUsers, '/users')
+# <== input : access_token
+# ==> output : username, name , email
 api.add_resource(SecretResource, '/profil')
 
 
+# prefix
+
+
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True,host='0.0.0.0')
